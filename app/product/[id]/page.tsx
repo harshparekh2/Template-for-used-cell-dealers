@@ -22,6 +22,8 @@ export default function ProductDetailPage({ params }: ProductDetailPageProps) {
   const [quantity, setQuantity] = useState(1)
   const [isAdded, setIsAdded] = useState(false)
   const [activeImage, setActiveImage] = useState(0)
+  const availableQty = Number(product?.stockQuantity ?? (product?.inStock ? 1 : 0))
+  const isOutOfStock = availableQty <= 0
 
   if (!product) {
     return (
@@ -45,12 +47,15 @@ export default function ProductDetailPage({ params }: ProductDetailPageProps) {
   }
 
   const handleAddToCart = () => {
+    if (isOutOfStock) return
     addItem(product, quantity)
     setIsAdded(true)
     setTimeout(() => setIsAdded(false), 2000)
   }
 
-  const images = product.images.length > 0 ? product.images : ['/placeholder.jpg']
+  const images = product.images.length > 0 ? product.images : ['/icon.svg']
+  const isDataUrl = (src: string) =>
+    src.startsWith('data:image/') || src.endsWith('.svg')
 
   return (
     <div className="flex flex-col min-h-screen bg-background">
@@ -76,12 +81,20 @@ export default function ProductDetailPage({ params }: ProductDetailPageProps) {
               <div className="space-y-4">
                 <div className="aspect-square bg-muted rounded-lg overflow-hidden relative group">
                   {images[activeImage] ? (
-                    <Image
-                      src={images[activeImage]}
-                      alt={product.name}
-                      fill
-                      className="object-cover"
-                    />
+                    isDataUrl(images[activeImage]) ? (
+                      <img
+                        src={images[activeImage]}
+                        alt={product.name}
+                        className="absolute inset-0 w-full h-full object-cover"
+                      />
+                    ) : (
+                      <Image
+                        src={images[activeImage]}
+                        alt={product.name}
+                        fill
+                        className="object-cover"
+                      />
+                    )
                   ) : (
                     <div className="w-full h-full flex items-center justify-center text-muted-foreground">
                       <ImageIcon className="w-12 h-12" />
@@ -116,7 +129,11 @@ export default function ProductDetailPage({ params }: ProductDetailPageProps) {
                           activeImage === idx ? 'border-accent' : 'border-transparent'
                         }`}
                       >
-                        <Image src={img} alt={`${product.name} ${idx + 1}`} width={100} height={100} className="object-cover w-full h-full" />
+                        {isDataUrl(img) ? (
+                          <img src={img} alt={`${product.name} ${idx + 1}`} className="object-cover w-full h-full" />
+                        ) : (
+                          <Image src={img} alt={`${product.name} ${idx + 1}`} width={100} height={100} className="object-cover w-full h-full" />
+                        )}
                       </button>
                     ))}
                   </div>
@@ -157,6 +174,29 @@ export default function ProductDetailPage({ params }: ProductDetailPageProps) {
                   {product.description}
                 </p>
 
+                {/* Device Details */}
+                <div>
+                  <h3 className="text-lg font-serif font-bold text-foreground mb-4">Device Details</h3>
+                  <div className="grid grid-cols-2 gap-3 text-sm">
+                    <div className="rounded-lg border border-border p-3">
+                      <p className="text-muted-foreground">Color</p>
+                      <p className="text-foreground font-semibold">{product.color || 'Not specified'}</p>
+                    </div>
+                    <div className="rounded-lg border border-border p-3">
+                      <p className="text-muted-foreground">Year</p>
+                      <p className="text-foreground font-semibold">{product.year || 'Not specified'}</p>
+                    </div>
+                    <div className="rounded-lg border border-border p-3">
+                      <p className="text-muted-foreground">Storage</p>
+                      <p className="text-foreground font-semibold">{product.storage || 'Not specified'}</p>
+                    </div>
+                    <div className="rounded-lg border border-border p-3">
+                      <p className="text-muted-foreground">RAM</p>
+                      <p className="text-foreground font-semibold">{product.ram || 'Not specified'}</p>
+                    </div>
+                  </div>
+                </div>
+
                 {/* Key Specs */}
                 <div>
                   <h3 className="text-lg font-serif font-bold text-foreground mb-4">Key Specifications</h3>
@@ -178,6 +218,7 @@ export default function ProductDetailPage({ params }: ProductDetailPageProps) {
                     <div className="flex items-center border border-border rounded-lg">
                       <button
                         onClick={() => setQuantity(Math.max(1, quantity - 1))}
+                        disabled={isOutOfStock}
                         className="px-4 py-2 hover:bg-muted transition-colors"
                       >
                         −
@@ -186,7 +227,8 @@ export default function ProductDetailPage({ params }: ProductDetailPageProps) {
                         {quantity}
                       </span>
                       <button
-                        onClick={() => setQuantity(quantity + 1)}
+                        onClick={() => setQuantity(Math.min(Math.max(1, availableQty), quantity + 1))}
+                        disabled={isOutOfStock || quantity >= Math.max(1, availableQty)}
                         className="px-4 py-2 hover:bg-muted transition-colors"
                       >
                         +
@@ -198,13 +240,18 @@ export default function ProductDetailPage({ params }: ProductDetailPageProps) {
                   <div className="flex gap-3">
                     <button
                       onClick={handleAddToCart}
+                      disabled={isOutOfStock}
                       className={`flex-1 px-8 py-4 rounded-lg font-semibold text-lg flex items-center justify-center gap-2 transition-all ${
-                        isAdded
+                        isOutOfStock
+                          ? 'bg-muted text-muted-foreground cursor-not-allowed'
+                          : isAdded
                           ? 'bg-accent/20 text-accent'
                           : 'bg-foreground text-background hover:bg-foreground/90'
                       }`}
                     >
-                      {isAdded ? (
+                      {isOutOfStock ? (
+                        <>Out of Stock</>
+                      ) : isAdded ? (
                         <>
                           <Check className="w-5 h-5" />
                           Added to Cart
@@ -227,10 +274,12 @@ export default function ProductDetailPage({ params }: ProductDetailPageProps) {
 
                 {/* Stock Status */}
                 <div className="flex items-center gap-2 text-sm">
-                  {product.inStock ? (
+                  {!isOutOfStock ? (
                     <>
                       <Check className="w-5 h-5 text-accent" />
-                      <span className="text-foreground font-semibold">In Stock - Free India-wide Shipping</span>
+                      <span className="text-foreground font-semibold">
+                        In Stock ({availableQty} left) - Free India-wide Shipping
+                      </span>
                     </>
                   ) : (
                     <span className="text-muted-foreground">Out of Stock</span>
@@ -239,7 +288,7 @@ export default function ProductDetailPage({ params }: ProductDetailPageProps) {
 
                 {/* Additional Info */}
                 <div className="space-y-3 border-t border-border pt-6">
-                  <h4 className="text-sm font-semibold text-foreground uppercase tracking-wider">Why LuxCell India?</h4>
+                  <h4 className="text-sm font-semibold text-foreground uppercase tracking-wider">Why HP Verse India?</h4>
                   <ul className="space-y-2 text-sm text-muted-foreground">
                     <li className="flex items-start gap-2">
                       <span className="text-accent">→</span>
@@ -247,7 +296,7 @@ export default function ProductDetailPage({ params }: ProductDetailPageProps) {
                     </li>
                     <li className="flex items-start gap-2">
                       <span className="text-accent">→</span>
-                      <span>1-year LuxCell Warranty on every phone</span>
+                      <span>1-year HP Verse Warranty on every phone</span>
                     </li>
                     <li className="flex items-start gap-2">
                       <span className="text-accent">→</span>
@@ -276,7 +325,11 @@ export default function ProductDetailPage({ params }: ProductDetailPageProps) {
                   >
                     <div className="aspect-square bg-muted relative overflow-hidden">
                       {p.images[0] ? (
-                        <Image src={p.images[0]} alt={p.name} fill className="object-cover group-hover:scale-105 transition-transform duration-500" />
+                          isDataUrl(p.images[0]) ? (
+                            <img src={p.images[0]} alt={p.name} className="absolute inset-0 w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
+                          ) : (
+                            <Image src={p.images[0]} alt={p.name} fill className="object-cover group-hover:scale-105 transition-transform duration-500" />
+                          )
                       ) : (
                         <div className="w-full h-full flex items-center justify-center text-muted-foreground">
                           <ImageIcon className="w-8 h-8" />

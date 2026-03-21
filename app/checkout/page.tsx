@@ -4,6 +4,7 @@ import { Header } from '@/components/Header'
 import { Footer } from '@/components/Footer'
 import { useCartStore } from '@/store/cartStore'
 import { useOrderStore } from '@/store/orderStore'
+import { useProductStore } from '@/store/productStore'
 import { useState } from 'react'
 import Link from 'next/link'
 import { Check, Lock, Smartphone, CreditCard, Wallet, Truck } from 'lucide-react'
@@ -20,6 +21,7 @@ const INDIAN_STATES = [
 export default function CheckoutPage() {
   const { items, getTotal, clearCart } = useCartStore()
   const { addOrder } = useOrderStore()
+  const { products, setProducts } = useProductStore()
   const [step, setStep] = useState<'shipping' | 'payment' | 'confirmation'>('shipping')
   const [formData, setFormData] = useState({
     // Shipping
@@ -35,6 +37,11 @@ export default function CheckoutPage() {
     // Payment
     paymentMethod: 'UPI' as 'UPI' | 'COD' | 'NetBanking'
   })
+  const hasUnavailableItems = items.some((item) => {
+    const latest = products.find((p) => p.id === item.product.id)
+    const qty = Number(latest?.stockQuantity ?? (latest?.inStock ? 1 : 0))
+    return qty <= 0 || item.quantity > qty
+  })
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     const { name, value } = e.target
@@ -43,11 +50,13 @@ export default function CheckoutPage() {
 
   const handleShippingSubmit = (e: React.FormEvent) => {
     e.preventDefault()
+    if (hasUnavailableItems) return
     setStep('payment')
   }
 
   const handlePaymentSubmit = (e: React.FormEvent) => {
     e.preventDefault()
+    if (hasUnavailableItems) return
     
     const totalAmount = getTotal() + Math.round(getTotal() * 0.12)
     
@@ -55,10 +64,30 @@ export default function CheckoutPage() {
     addOrder({
       customerName: `${formData.firstName} ${formData.lastName}`,
       email: formData.email,
+      phone: formData.phone,
       address: `${formData.address}, ${formData.city}, ${formData.state} - ${formData.zip}, ${formData.country}`,
+      city: formData.city,
+      state: formData.state,
+      zip: formData.zip,
+      country: formData.country,
+      paymentMethod: formData.paymentMethod,
       items: [...items],
       total: totalAmount
     })
+
+    // Decrease inventory based on ordered quantity
+    const updatedProducts = products.map((product) => {
+      const orderedItem = items.find((item) => item.product.id === product.id)
+      if (!orderedItem) return product
+      const currentQty = Number(product.stockQuantity ?? (product.inStock ? 1 : 0))
+      const nextQty = Math.max(0, currentQty - orderedItem.quantity)
+      return {
+        ...product,
+        stockQuantity: nextQty,
+        inStock: nextQty > 0,
+      }
+    })
+    setProducts(updatedProducts)
 
     setStep('confirmation')
     clearCart()
@@ -129,6 +158,11 @@ export default function CheckoutPage() {
               {/* Shipping Form */}
               {(step === 'shipping') && (
                 <form onSubmit={handleShippingSubmit} className="space-y-6">
+                  {hasUnavailableItems && (
+                    <div className="p-3 rounded-lg border border-red-200 bg-red-50 text-red-700 text-sm font-semibold">
+                      Some products in your cart are out of stock or exceed available quantity. Please update your cart before checkout.
+                    </div>
+                  )}
                   <div>
                     <h2 className="text-2xl font-serif font-bold text-foreground mb-6">Shipping Information</h2>
                   </div>
@@ -230,6 +264,7 @@ export default function CheckoutPage() {
 
                   <button
                     type="submit"
+                    disabled={hasUnavailableItems}
                     className="w-full px-6 py-3 bg-foreground text-background font-semibold rounded-lg hover:bg-foreground/90 transition-colors"
                   >
                     Continue to Payment
@@ -296,6 +331,7 @@ export default function CheckoutPage() {
                     </button>
                     <button
                       type="submit"
+                      disabled={hasUnavailableItems}
                       className="flex-1 px-6 py-3 bg-foreground text-background font-semibold rounded-lg hover:bg-foreground/90 transition-colors"
                     >
                       Complete Order

@@ -2,6 +2,7 @@
 
 import Image from 'next/image'
 import Link from 'next/link'
+import { useRouter } from 'next/navigation'
 import { Product } from '@/store/productStore'
 import { ShoppingCart, ShieldCheck } from 'lucide-react'
 import { useCartStore } from '@/store/cartStore'
@@ -13,18 +14,44 @@ interface ProductCardProps {
 
 export function ProductCard({ product }: ProductCardProps) {
   const addItem = useCartStore((state) => state.addItem)
+  const router = useRouter()
+  const imageSrc = product.images[0]
+  const availableQty = Number(product.stockQuantity ?? (product.inStock ? 1 : 0))
+  const isOutOfStock = availableQty <= 0
+  const shouldUseImg =
+    typeof imageSrc === 'string' &&
+    (imageSrc.startsWith('data:image/') || imageSrc.endsWith('.svg'))
 
   return (
-    <div className="group flex flex-col h-full bg-card border border-border rounded-lg overflow-hidden hover:shadow-lg transition-shadow">
+    <div
+      role="button"
+      tabIndex={0}
+      onClick={() => router.push(`/product/${product.id}`)}
+      onKeyDown={(e) => {
+        if (e.key === 'Enter' || e.key === ' ') {
+          e.preventDefault()
+          router.push(`/product/${product.id}`)
+        }
+      }}
+      className="group flex flex-col h-full bg-card border border-border rounded-lg overflow-hidden hover:shadow-lg transition-shadow cursor-pointer"
+    >
       {/* Image Container */}
       <div className="relative aspect-square bg-muted overflow-hidden">
-        {product.images[0] ? (
-          <Image
-            src={product.images[0]}
-            alt={product.name}
-            fill
-            className="object-cover group-hover:scale-105 transition-transform duration-500"
-          />
+        {imageSrc ? (
+          shouldUseImg ? (
+            <img
+              src={imageSrc}
+              alt={product.name}
+              className="absolute inset-0 w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+            />
+          ) : (
+            <Image
+              src={imageSrc}
+              alt={product.name}
+              fill
+              className="object-cover group-hover:scale-105 transition-transform duration-500"
+            />
+          )
         ) : (
           <div className="w-full h-full bg-gradient-to-b from-muted to-muted/50 flex items-center justify-center">
             <span className="text-muted-foreground text-sm">Product Image</span>
@@ -35,6 +62,17 @@ export function ProductCard({ product }: ProductCardProps) {
             <ShieldCheck className="w-3 h-3 text-accent" />
             {product.condition}
           </span>
+        </div>
+        <div className="absolute top-3 right-3">
+          {isOutOfStock ? (
+            <span className="px-2 py-1 bg-red-100 text-red-700 border border-red-200 rounded text-[10px] font-bold uppercase tracking-wider">
+              Out of Stock
+            </span>
+          ) : (
+            <span className="px-2 py-1 bg-green-100 text-green-700 border border-green-200 rounded text-[10px] font-bold uppercase tracking-wider">
+              {availableQty} left
+            </span>
+          )}
         </div>
       </div>
 
@@ -68,8 +106,17 @@ export function ProductCard({ product }: ProductCardProps) {
             </p>
           </div>
           <button
-            onClick={() => addItem(product, 1)}
-            className="p-3 bg-accent text-accent-foreground rounded-lg hover:bg-accent/90 transition-colors"
+            onClick={(e) => {
+              e.stopPropagation()
+              if (isOutOfStock) return
+              addItem(product, 1)
+            }}
+            disabled={isOutOfStock}
+            className={`p-3 rounded-lg transition-colors ${
+              isOutOfStock
+                ? 'bg-muted text-muted-foreground cursor-not-allowed'
+                : 'bg-accent text-accent-foreground hover:bg-accent/90'
+            }`}
             aria-label={`Add ${product.name} to cart`}
           >
             <ShoppingCart className="w-5 h-5" />

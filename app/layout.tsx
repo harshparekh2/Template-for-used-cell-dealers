@@ -8,8 +8,8 @@ const geist = Geist({ subsets: ["latin"], variable: '--font-sans' });
 const playfair = Playfair_Display({ subsets: ["latin"], variable: '--font-serif' });
 
 export const metadata: Metadata = {
-  title: 'LuxCell - Premium Smartphone Dealership',
-  description: 'Discover premium smartphones with expert consultation and white-glove service at LuxCell',
+  title: 'HP Verse - Premium Smartphone Dealership',
+  description: 'Discover premium smartphones with expert consultation and white-glove service at HP Verse',
   generator: 'v0.app',
   icons: {
     icon: [

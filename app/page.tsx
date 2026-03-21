@@ -6,6 +6,7 @@ import { ProductCard } from '@/components/ProductCard'
 import { useProductStore } from '@/store/productStore'
 import Link from 'next/link'
 import { ArrowRight } from 'lucide-react'
+import { Hero3D } from '@/components/Hero3D'
 
 export default function Home() {
   const products = useProductStore((state) => state.products)
@@ -32,28 +33,26 @@ export default function Home() {
                 <p className="text-lg text-muted-foreground leading-relaxed max-w-md">
                   Experience cutting-edge technology with white-glove service. Our carefully curated collection of premium smartphones combines innovation, design, and performance.
                 </p>
-                <div className="flex gap-4 pt-4">
+                <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 pt-4">
                   <Link
                     href="/collection"
-                    className="inline-flex items-center gap-2 px-8 py-3 bg-foreground text-background font-semibold rounded-lg hover:bg-foreground/90 transition-colors"
+                    className="inline-flex items-center justify-center gap-2 px-8 py-3 bg-foreground text-background font-semibold rounded-lg hover:bg-foreground/90 transition-colors"
                   >
                     Explore Collection
                     <ArrowRight className="w-4 h-4" />
                   </Link>
                   <Link
                     href="/contact"
-                    className="inline-flex items-center gap-2 px-8 py-3 border border-border text-foreground font-semibold rounded-lg hover:bg-muted transition-colors"
+                    className="inline-flex items-center justify-center gap-2 px-8 py-3 border border-border text-foreground font-semibold rounded-lg hover:bg-muted transition-colors"
                   >
                     Book Consultation
                   </Link>
                 </div>
               </div>
 
-              {/* Right Content - Hero Image Placeholder */}
-              <div className="relative aspect-square bg-gradient-to-br from-muted to-muted/50 rounded-lg flex items-center justify-center overflow-hidden">
-                <div className="text-center space-y-4">
-                  <div className="text-muted-foreground text-sm">Featured Product Image</div>
-                </div>
+              {/* Right Content - Featured Product Image */}
+              <div className="relative aspect-[4/3] sm:aspect-square bg-gradient-to-br from-muted to-muted/50 rounded-lg flex items-center justify-center overflow-hidden">
+                <Hero3D />
               </div>
             </div>
           </div>
@@ -93,7 +92,7 @@ export default function Home() {
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div className="mb-12 text-center">
               <p className="text-sm uppercase tracking-widest text-accent font-semibold mb-4">
-                Why LuxCell
+                Why HP Verse
               </p>
               <h2 className="text-4xl sm:text-5xl font-serif font-bold text-foreground max-w-2xl mx-auto">
                 Premium Experience, Guaranteed

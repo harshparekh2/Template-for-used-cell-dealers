@@ -19,7 +19,7 @@ interface AdminStore {
 const defaultAdmins: AdminUser[] = [
   {
     id: '1',
-    email: 'admin@luxcell.com',
+    email: 'admin@hpverse.com',
     password: 'admin123',
     name: 'Admin User',
   },

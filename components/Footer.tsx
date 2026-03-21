@@ -9,7 +9,7 @@ export function Footer() {
         <div className="grid grid-cols-1 md:grid-cols-4 gap-8 mb-8">
           {/* Company */}
           <div>
-            <h3 className="font-serif text-lg font-bold mb-4">LuxCell</h3>
+            <h3 className="font-serif text-lg font-bold mb-4">HP Verse</h3>
             <p className="text-sm opacity-75">
               Premium smartphone dealership with white-glove service
             </p>
@@ -44,8 +44,8 @@ export function Footer() {
             </h4>
             <ul className="space-y-2 text-sm">
               <li>
-                <a href="mailto:support@luxcell.in" className="opacity-75 hover:opacity-100 transition-opacity">
-                  support@luxcell.in
+                <a href="mailto:support@hpverse.in" className="opacity-75 hover:opacity-100 transition-opacity">
+                  support@hpverse.in
                 </a>
               </li>
               <li>
@@ -71,7 +71,7 @@ export function Footer() {
 
         <div className="border-t border-background/20 pt-8">
           <p className="text-center text-sm opacity-75">
-            &copy; {new Date().getFullYear()} LuxCell. All rights reserved.
+            &copy; {new Date().getFullYear()} HP Verse. All rights reserved.
           </p>
         </div>
       </div>

@@ -4,8 +4,8 @@ import { useAdminStore } from '@/store/adminStore'
 import { useProductStore, Product } from '@/store/productStore'
 import { useOrderStore, Order } from '@/store/orderStore'
 import { useRouter } from 'next/navigation'
-import { LogOut, Plus, Edit, Trash2, Package, ShoppingCart, Users, TrendingUp, X, Image as ImageIcon } from 'lucide-react'
-import { useState, useEffect } from 'react'
+import { LogOut, Plus, Edit, Trash2, Package, ShoppingCart, Users, TrendingUp, X, Image as ImageIcon, Eye } from 'lucide-react'
+import { useState, useEffect, useRef } from 'react'
 import { formatINR } from '@/lib/utils'
 
 export default function AdminDashboardPage() {
@@ -20,22 +20,42 @@ export default function AdminDashboardPage() {
   const [isHydrated, setIsHydrated] = useState(false)
   const [isModalOpen, setIsModalOpen] = useState(false)
   const [editingProduct, setEditingProduct] = useState<Product | null>(null)
+  const [selectedOrder, setSelectedOrder] = useState<Order | null>(null)
 
   // Product Form State
   const [formData, setFormData] = useState<Omit<Product, 'id'>>({
     name: '',
     brand: '',
     price: 0,
-    images: ['/placeholder.jpg'],
+    images: ['/icon.svg'],
     specs: [],
     description: '',
     inStock: true,
     condition: 'Excellent',
-    category: 'flagship'
+    category: 'flagship',
+    color: '',
+    year: '',
+    storage: '',
+    ram: '',
+    stockQuantity: 1
   })
 
-  // Helper for image input
-  const [imageUrls, setImageUrls] = useState('/placeholder.jpg')
+  const MAX_IMAGES = 6
+  const MAX_FILE_SIZE_MB = 10
+
+  const [uploadedImages, setUploadedImages] = useState<string[]>(['/icon.svg'])
+  const [imageError, setImageError] = useState<string | null>(null)
+  const fileInputRef = useRef<HTMLInputElement | null>(null)
+  /** One line per bullet on product page “Key specifications” */
+  const [specsText, setSpecsText] = useState('')
+
+  const readFileAsDataUrl = (file: File) =>
+    new Promise<string>((resolve, reject) => {
+      const reader = new FileReader()
+      reader.onload = () => resolve(String(reader.result))
+      reader.onerror = () => reject(new Error('Failed to read image file'))
+      reader.readAsDataURL(file)
+    })
 
   // Redirect if not logged in and handle hydration
   useEffect(() => {
@@ -58,28 +78,73 @@ export default function AdminDashboardPage() {
       name: '',
       brand: '',
       price: 0,
-      images: ['/placeholder.jpg'],
+      images: ['/icon.svg'],
       specs: [],
       description: '',
       inStock: true,
       condition: 'Excellent',
-      category: 'flagship'
+      category: 'flagship',
+      color: '',
+      year: '',
+      storage: '',
+      ram: '',
+      stockQuantity: 1
     })
-    setImageUrls('/placeholder.jpg')
+    setUploadedImages(['/icon.svg'])
+    setImageError(null)
+    setSpecsText('')
     setIsModalOpen(true)
   }
 
   const handleEditProduct = (product: Product) => {
     setEditingProduct(product)
-    setFormData(product)
-    setImageUrls(product.images.join('\n'))
+    setFormData({
+      ...product,
+      color: product.color ?? '',
+      year: product.year ?? '',
+      storage: product.storage ?? '',
+      ram: product.ram ?? '',
+      stockQuantity: Number(product.stockQuantity ?? (product.inStock ? 1 : 0)),
+    })
+    setUploadedImages(product.images?.length ? product.images : ['/icon.svg'])
+    setImageError(null)
+    setSpecsText((product.specs ?? []).join('\n'))
     setIsModalOpen(true)
+  }
+
+  const handleImageFiles = async (files: File[]) => {
+    setImageError(null)
+    if (files.length === 0) return
+
+    const oversized = files.find((f) => f.size > MAX_FILE_SIZE_MB * 1024 * 1024)
+    if (oversized) {
+      setImageError(`Each image must be <= ${MAX_FILE_SIZE_MB}MB.`)
+      return
+    }
+
+    const nonPlaceholder = uploadedImages.filter((img) => img !== '/icon.svg')
+    const newImageUrls = await Promise.all(files.map(readFileAsDataUrl))
+    const merged = [...nonPlaceholder, ...newImageUrls].slice(0, MAX_IMAGES)
+    const finalImages = merged.length ? merged : ['/icon.svg']
+    setUploadedImages(finalImages)
+    setFormData((prev) => ({ ...prev, images: finalImages }))
   }
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
-    const finalImages = imageUrls.split('\n').filter(url => url.trim() !== '')
-    const submissionData = { ...formData, images: finalImages }
+    const submissionImages = uploadedImages?.length ? uploadedImages : ['/icon.svg']
+    const specs = specsText
+      .split('\n')
+      .map((line) => line.trim())
+      .filter((line) => line.length > 0)
+    const normalizedStock = Math.max(0, Math.floor(Number(formData.stockQuantity ?? 0)))
+    const submissionData = {
+      ...formData,
+      images: submissionImages,
+      specs,
+      stockQuantity: normalizedStock,
+      inStock: normalizedStock > 0,
+    }
     
     if (editingProduct) {
       updateProduct(editingProduct.id, submissionData)
@@ -193,31 +258,150 @@ export default function AdminDashboardPage() {
                   </select>
                 </div>
                 <div className="space-y-2">
-                  <label className="text-sm font-semibold">Stock Status</label>
-                  <div className="flex items-center gap-2 h-10">
-                    <input
-                      type="checkbox"
-                      id="inStock"
-                      checked={formData.inStock}
-                      onChange={e => setFormData({ ...formData, inStock: e.target.checked })}
-                    />
-                    <label htmlFor="inStock" className="text-sm font-semibold">In Stock</label>
-                  </div>
+                  <label className="text-sm font-semibold">Available Quantity</label>
+                  <input
+                    type="number"
+                    min={0}
+                    className="w-full p-2 border border-border rounded-lg bg-background"
+                    value={Number(formData.stockQuantity ?? 0)}
+                    onChange={e => {
+                      const qty = Math.max(0, Number(e.target.value))
+                      setFormData({ ...formData, stockQuantity: qty, inStock: qty > 0 })
+                    }}
+                    placeholder="e.g., 5"
+                  />
+                  <p className="text-[10px] text-muted-foreground italic">Example: 5 means "5 pieces left".</p>
+                </div>
+              </div>
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <label className="text-sm font-semibold">Color</label>
+                  <input
+                    type="text"
+                    className="w-full p-2 border border-border rounded-lg bg-background"
+                    value={formData.color ?? ''}
+                    onChange={e => setFormData({ ...formData, color: e.target.value })}
+                    placeholder="e.g., Black"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <label className="text-sm font-semibold">Year</label>
+                  <input
+                    type="text"
+                    className="w-full p-2 border border-border rounded-lg bg-background"
+                    value={formData.year ?? ''}
+                    onChange={e => setFormData({ ...formData, year: e.target.value })}
+                    placeholder="e.g., 2023"
+                  />
+                </div>
+              </div>
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <label className="text-sm font-semibold">Storage</label>
+                  <input
+                    type="text"
+                    className="w-full p-2 border border-border rounded-lg bg-background"
+                    value={formData.storage ?? ''}
+                    onChange={e => setFormData({ ...formData, storage: e.target.value })}
+                    placeholder="e.g., 128GB"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <label className="text-sm font-semibold">RAM</label>
+                  <input
+                    type="text"
+                    className="w-full p-2 border border-border rounded-lg bg-background"
+                    value={formData.ram ?? ''}
+                    onChange={e => setFormData({ ...formData, ram: e.target.value })}
+                    placeholder="e.g., 8GB"
+                  />
                 </div>
               </div>
               <div className="space-y-2">
-                <label className="text-sm font-semibold flex items-center gap-2">
-                  <ImageIcon className="w-4 h-4" />
-                  Product Photos (One URL per line)
-                </label>
+                  <label className="text-sm font-semibold flex items-center gap-2">
+                    <ImageIcon className="w-4 h-4" />
+                    Product Images (upload)
+                  </label>
+                  <input
+                    ref={fileInputRef}
+                    type="file"
+                    accept="image/*"
+                    multiple
+                    className="hidden"
+                    onChange={async (e) => {
+                      const files = Array.from(e.target.files ?? [])
+                      await handleImageFiles(files)
+                      e.target.value = ''
+                    }}
+                  />
+                  <div className="flex items-center gap-2">
+                    <button
+                      type="button"
+                      className="px-3 py-2 border border-border rounded-lg hover:bg-muted text-sm"
+                      onClick={() => fileInputRef.current?.click()}
+                    >
+                      Add More Photos
+                    </button>
+                    <span className="text-xs text-muted-foreground">
+                      {uploadedImages.filter((img) => img !== '/icon.svg').length}/{MAX_IMAGES} photos
+                    </span>
+                  </div>
+
+                  <div className="mt-2 grid grid-cols-3 gap-2">
+                    {uploadedImages.map((img, idx) => (
+                      <div key={`${img}-${idx}`} className="relative aspect-square rounded-lg overflow-hidden border border-border bg-muted">
+                        <img src={img} alt={`Product image ${idx + 1}`} className="absolute inset-0 w-full h-full object-cover" />
+                        <button
+                          type="button"
+                          className="absolute top-1 right-1 p-1 rounded bg-background/80 backdrop-blur border border-border hover:bg-background"
+                          onClick={() => {
+                            const next = uploadedImages.filter((_, i) => i !== idx)
+                            const final = next.length ? next : ['/icon.svg']
+                            setUploadedImages(final)
+                            setFormData((prev) => ({ ...prev, images: final }))
+                          }}
+                          aria-label="Remove image"
+                        >
+                          <Trash2 className="w-4 h-4 text-foreground" />
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+
+                  {imageError ? (
+                    <p className="text-xs text-destructive mt-1">{imageError}</p>
+                  ) : (
+                    <p className="text-[10px] text-muted-foreground italic mt-1">
+                      Images are stored in your browser (localStorage). Up to {MAX_IMAGES} photos.
+                    </p>
+                  )}
+
+                  <div className="pt-2 flex gap-2">
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setUploadedImages(['/icon.svg'])
+                        setFormData((prev) => ({ ...prev, images: ['/icon.svg'] }))
+                        setImageError(null)
+                      }}
+                      className="px-3 py-2 border border-border rounded-lg hover:bg-muted text-sm"
+                    >
+                      Clear
+                    </button>
+                  </div>
+              </div>
+              <div className="space-y-2">
+                <label className="text-sm font-semibold">Key specifications</label>
                 <textarea
-                  className="w-full p-2 border border-border rounded-lg bg-background font-mono text-xs"
-                  rows={4}
-                  placeholder="https://example.com/photo1.jpg&#10;https://example.com/photo2.jpg"
-                  value={imageUrls}
-                  onChange={e => setImageUrls(e.target.value)}
+                  className="w-full p-2 border border-border rounded-lg bg-background text-sm"
+                  rows={5}
+                  placeholder={'6.3" Display\nA18 Pro\n48MP Camera'}
+                  value={specsText}
+                  onChange={(e) => setSpecsText(e.target.value)}
                 />
-                <p className="text-[10px] text-muted-foreground italic">Add multiple photos to showcase phone condition from different angles.</p>
+                <p className="text-[10px] text-muted-foreground italic">
+                  One specification per line. Shown on the product page under “Key Specifications”.
+                </p>
               </div>
               <div className="space-y-2">
                 <label className="text-sm font-semibold">Description</label>
@@ -252,7 +436,7 @@ export default function AdminDashboardPage() {
       <header className="bg-card border-b border-border sticky top-0 z-40">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 flex items-center justify-between">
           <div>
-            <h1 className="text-2xl font-serif font-bold text-foreground">LuxCell Admin</h1>
+            <h1 className="text-2xl font-serif font-bold text-foreground">HP Verse Admin</h1>
             <p className="text-sm text-muted-foreground">Welcome, {admin?.name}</p>
           </div>
           <button
@@ -390,13 +574,15 @@ export default function AdminDashboardPage() {
                         </td>
                         <td className="py-4 px-6 text-foreground font-semibold">{formatINR(product.price)}</td>
                         <td className="py-4 px-6">
-                          <span className={`px-3 py-1 rounded-full text-xs font-semibold ${
-                            product.inStock
-                              ? 'bg-green-100 text-green-700'
-                              : 'bg-red-100 text-red-700'
-                          }`}>
-                            {product.inStock ? 'In Stock' : 'Out of Stock'}
-                          </span>
+                          {Number(product.stockQuantity ?? 0) > 0 ? (
+                            <span className="px-3 py-1 rounded-full text-xs font-semibold bg-green-100 text-green-700">
+                              {Math.floor(Number(product.stockQuantity ?? 0))} piece(s) left
+                            </span>
+                          ) : (
+                            <span className="px-3 py-1 rounded-full text-xs font-semibold bg-red-100 text-red-700">
+                              Out of Stock
+                            </span>
+                          )}
                         </td>
                         <td className="py-4 px-6 flex gap-2">
                           <button
@@ -465,12 +651,22 @@ export default function AdminDashboardPage() {
                         </select>
                       </td>
                       <td className="py-3 px-4">
-                        <button
-                          onClick={() => deleteOrder(order.id)}
-                          className="p-2 hover:bg-destructive/10 rounded-lg text-destructive transition-colors"
-                        >
-                          <Trash2 className="w-4 h-4" />
-                        </button>
+                        <div className="flex items-center gap-2">
+                          <button
+                            onClick={() => setSelectedOrder(order)}
+                            className="p-2 hover:bg-muted rounded-lg text-foreground transition-colors"
+                            title="View order details"
+                          >
+                            <Eye className="w-4 h-4" />
+                          </button>
+                          <button
+                            onClick={() => deleteOrder(order.id)}
+                            className="p-2 hover:bg-destructive/10 rounded-lg text-destructive transition-colors"
+                            title="Delete order"
+                          >
+                            <Trash2 className="w-4 h-4" />
+                          </button>
+                        </div>
                       </td>
                     </tr>
                   ))}
@@ -482,6 +678,69 @@ export default function AdminDashboardPage() {
                 </tbody>
               </table>
             </div>
+
+            {selectedOrder && (
+              <div className="mt-6 border border-border rounded-lg p-6 bg-muted/20 space-y-5">
+                <div className="flex items-center justify-between">
+                  <h3 className="text-lg font-serif font-bold text-foreground">Order Details: {selectedOrder.id}</h3>
+                  <button
+                    onClick={() => setSelectedOrder(null)}
+                    className="px-3 py-1 border border-border rounded-lg hover:bg-muted text-sm"
+                  >
+                    Close
+                  </button>
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
+                  <div className="space-y-1">
+                    <p className="text-muted-foreground">Customer</p>
+                    <p className="text-foreground font-semibold">{selectedOrder.customerName}</p>
+                  </div>
+                  <div className="space-y-1">
+                    <p className="text-muted-foreground">Phone</p>
+                    <p className="text-foreground font-semibold">{selectedOrder.phone || 'N/A'}</p>
+                  </div>
+                  <div className="space-y-1">
+                    <p className="text-muted-foreground">Email</p>
+                    <p className="text-foreground font-semibold">{selectedOrder.email}</p>
+                  </div>
+                  <div className="space-y-1">
+                    <p className="text-muted-foreground">Payment Method</p>
+                    <p className="text-foreground font-semibold">{selectedOrder.paymentMethod || 'N/A'}</p>
+                  </div>
+                  <div className="space-y-1 md:col-span-2">
+                    <p className="text-muted-foreground">Delivery Address</p>
+                    <p className="text-foreground font-semibold">{selectedOrder.address}</p>
+                  </div>
+                  <div className="space-y-1">
+                    <p className="text-muted-foreground">Date</p>
+                    <p className="text-foreground font-semibold">{selectedOrder.date}</p>
+                  </div>
+                  <div className="space-y-1">
+                    <p className="text-muted-foreground">Total</p>
+                    <p className="text-foreground font-semibold">{formatINR(selectedOrder.total)}</p>
+                  </div>
+                </div>
+
+                <div>
+                  <p className="text-muted-foreground text-sm mb-2">Products in this order</p>
+                  <div className="space-y-2">
+                    {selectedOrder.items.map((item) => (
+                      <div
+                        key={`${selectedOrder.id}-${item.product.id}`}
+                        className="flex items-center justify-between border border-border rounded-lg p-3 bg-background"
+                      >
+                        <div>
+                          <p className="text-foreground font-semibold">{item.product.name}</p>
+                          <p className="text-xs text-muted-foreground">Qty: {item.quantity}</p>
+                        </div>
+                        <p className="text-foreground font-semibold">{formatINR(item.product.price * item.quantity)}</p>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            )}
           </div>
         )}
       </main>

@@ -1,4 +1,4 @@
-# LuxCell - Premium Smartphone Dealership
+# HP Verse - Premium Smartphone Dealership
 
 A full-featured premium smartphone dealership platform built with Next.js 16, React 19, and modern web technologies.
 
@@ -16,7 +16,7 @@ A full-featured premium smartphone dealership platform built with Next.js 16, Re
 - **Checkout** - Multi-step checkout with shipping, payment, and confirmation
 
 ### Admin Panel
-- **Admin Login** - Secure authentication (demo: admin@luxcell.com / admin123)
+- **Admin Login** - Secure authentication (demo: admin@hpverse.com / admin123)
 - **Admin Dashboard** - Overview of orders, products, and customers
 - **Product Management** - View and manage product inventory
 - **Order Management** - Track and manage customer orders
@@ -53,7 +53,7 @@ npm run dev
 
 ## Admin Access
 - **URL**: [http://localhost:3000/admin](http://localhost:3000/admin)
-- **Email**: `admin@luxcell.com`
+- **Email**: `admin@hpverse.com`
 - **Password**: `admin123`
 
 ## Project Structure
@@ -99,7 +99,7 @@ npm run dev
 ## Admin Access
 
 ### Demo Credentials
-- **Email**: admin@luxcell.com
+- **Email**: admin@hpverse.com
 - **Password**: admin123
 
 The admin credentials are stored in `store/adminStore.ts` for demo purposes. In production, implement proper authentication.

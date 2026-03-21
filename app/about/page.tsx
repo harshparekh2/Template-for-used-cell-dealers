@@ -23,7 +23,7 @@ export default function AboutPage() {
               </h1>
             </div>
             <p className="text-xl text-muted-foreground max-w-2xl mx-auto leading-relaxed">
-              Since 2018, LuxCell has been dedicated to bringing together the world's finest smartphones with expert guidance and white-glove service.
+              Since 2018, HP Verse has been dedicated to bringing together the world's finest smartphones with expert guidance and white-glove service.
             </p>
           </div>
         </section>

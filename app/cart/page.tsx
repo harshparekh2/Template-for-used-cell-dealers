@@ -12,6 +12,7 @@ import { formatINR } from '@/lib/utils'
 export default function CartPage() {
   const { items, removeItem, updateQuantity, getTotal, clearCart } = useCartStore()
   const [isHydrated, setIsHydrated] = useState(false)
+  const hasUnavailableItems = items.some((item) => Number(item.product.stockQuantity ?? (item.product.inStock ? 1 : 0)) <= 0)
 
   useEffect(() => {
     setIsHydrated(true)
@@ -111,12 +112,18 @@ export default function CartPage() {
                           {item.quantity}
                         </span>
                         <button
-                          onClick={() => updateQuantity(item.product.id, item.quantity + 1)}
+                          onClick={() => {
+                            const maxQty = Math.max(1, Number(item.product.stockQuantity ?? (item.product.inStock ? 1 : 0)))
+                            updateQuantity(item.product.id, Math.min(maxQty, item.quantity + 1))
+                          }}
                           className="px-3 py-1 hover:bg-muted transition-colors"
                         >
                           +
                         </button>
                       </div>
+                      {Number(item.product.stockQuantity ?? (item.product.inStock ? 1 : 0)) <= 0 && (
+                        <span className="text-xs text-red-600 font-semibold">Out of stock</span>
+                      )}
                       <button
                         onClick={() => removeItem(item.product.id)}
                         className="ml-auto p-2 hover:bg-destructive/10 rounded-lg text-destructive transition-colors"
@@ -165,13 +172,19 @@ export default function CartPage() {
                   </span>
                 </div>
 
-                <Link
-                  href="/checkout"
-                  className="w-full px-6 py-3 bg-foreground text-background font-semibold rounded-lg hover:bg-foreground/90 transition-colors flex items-center justify-center gap-2"
-                >
-                  Proceed to Checkout
-                  <ArrowRight className="w-4 h-4" />
-                </Link>
+                {hasUnavailableItems ? (
+                  <div className="w-full px-6 py-3 bg-muted text-muted-foreground font-semibold rounded-lg text-center">
+                    Remove out-of-stock items to checkout
+                  </div>
+                ) : (
+                  <Link
+                    href="/checkout"
+                    className="w-full px-6 py-3 bg-foreground text-background font-semibold rounded-lg hover:bg-foreground/90 transition-colors flex items-center justify-center gap-2"
+                  >
+                    Proceed to Checkout
+                    <ArrowRight className="w-4 h-4" />
+                  </Link>
+                )}
 
                 <button
                   onClick={() => clearCart()}

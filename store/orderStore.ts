@@ -6,7 +6,13 @@ export interface Order {
   id: string
   customerName: string
   email: string
+  phone: string
   address: string
+  city?: string
+  state?: string
+  zip?: string
+  country?: string
+  paymentMethod?: 'UPI' | 'COD' | 'NetBanking'
   items: CartItem[]
   total: number
   status: 'Pending' | 'Processing' | 'Completed' | 'Cancelled'
@@ -29,7 +35,7 @@ export const useOrderStore = create<OrderStore>()(
           orders: [
             {
               ...order,
-              id: `LUX-${Math.floor(Math.random() * 1000).toString().padStart(3, '0')}`,
+              id: `HPV-${Math.floor(Math.random() * 1000).toString().padStart(3, '0')}`,
               date: new Date().toLocaleDateString('en-US', {
                 month: 'short',
                 day: 'numeric',

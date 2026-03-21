@@ -16,7 +16,7 @@ export function Header() {
           {/* Logo */}
           <Link href="/" className="flex-shrink-0">
             <h1 className="text-2xl font-serif font-bold text-foreground tracking-tight">
-              LuxCell
+              HP Verse
             </h1>
           </Link>
 
@@ -76,31 +76,37 @@ export function Header() {
 
         {/* Mobile Navigation */}
         {isOpen && (
-          <nav className="md:hidden pb-4 space-y-2">
+          <nav className="md:hidden pb-4 pt-2">
+            <div className="rounded-2xl border border-border bg-muted/30 p-3 space-y-2">
             <Link
               href="/collection"
-              className="block text-foreground hover:text-accent transition-colors py-2 text-sm font-medium"
+              onClick={() => setIsOpen(false)}
+              className="block rounded-xl px-3 py-3 text-foreground hover:bg-background hover:text-accent transition-colors text-sm font-semibold"
             >
               Collection
             </Link>
             <Link
               href="/about"
-              className="block text-foreground hover:text-accent transition-colors py-2 text-sm font-medium"
+              onClick={() => setIsOpen(false)}
+              className="block rounded-xl px-3 py-3 text-foreground hover:bg-background hover:text-accent transition-colors text-sm font-semibold"
             >
               About
             </Link>
             <Link
               href="/contact"
-              className="block text-foreground hover:text-accent transition-colors py-2 text-sm font-medium"
+              onClick={() => setIsOpen(false)}
+              className="block rounded-xl px-3 py-3 text-foreground hover:bg-background hover:text-accent transition-colors text-sm font-semibold"
             >
               Contact
             </Link>
             <Link
               href="/admin"
-              className="block text-foreground hover:text-accent transition-colors py-2 text-sm font-medium"
+              onClick={() => setIsOpen(false)}
+              className="block rounded-xl px-3 py-3 text-foreground hover:bg-background hover:text-accent transition-colors text-sm font-semibold"
             >
               Admin
             </Link>
+            </div>
           </nav>
         )}
       </div>

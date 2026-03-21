@@ -51,10 +51,10 @@ export default function ContactPage() {
         {/* Contact Info & Form */}
         <section className="py-16 sm:py-24">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 mb-12">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 mb-12">
               {/* Contact Info Cards */}
-              <div className="space-y-4">
-                <div className="flex gap-4">
+              <div className="border border-border rounded-xl bg-muted/20 p-4 sm:p-5">
+                <div className="flex gap-3 sm:gap-4">
                   <Phone className="w-6 h-6 text-accent flex-shrink-0 mt-1" />
                   <div>
                     <h3 className="font-serif font-bold text-foreground mb-1">Phone</h3>
@@ -64,19 +64,19 @@ export default function ContactPage() {
                 </div>
               </div>
 
-              <div className="space-y-4">
-                <div className="flex gap-4">
+              <div className="border border-border rounded-xl bg-muted/20 p-4 sm:p-5">
+                <div className="flex gap-3 sm:gap-4">
                   <Mail className="w-6 h-6 text-accent flex-shrink-0 mt-1" />
                   <div>
                     <h3 className="font-serif font-bold text-foreground mb-1">Email</h3>
-                    <p className="text-muted-foreground text-sm">support@luxcell.in</p>
+                    <p className="text-muted-foreground text-sm">support@hpverse.in</p>
                     <p className="text-muted-foreground text-sm">We'll respond within 24 hours</p>
                   </div>
                 </div>
               </div>
 
-              <div className="space-y-4">
-                <div className="flex gap-4">
+              <div className="border border-border rounded-xl bg-muted/20 p-4 sm:p-5 sm:col-span-2 lg:col-span-1">
+                <div className="flex gap-3 sm:gap-4">
                   <MapPin className="w-6 h-6 text-accent flex-shrink-0 mt-1" />
                   <div>
                     <h3 className="font-serif font-bold text-foreground mb-1">Location</h3>
@@ -185,19 +185,19 @@ export default function ContactPage() {
               <div>
                 <h2 className="text-3xl font-serif font-bold text-foreground mb-6">Business Hours</h2>
                 
-                <div className="space-y-4 mb-8">
-                  <div className="flex items-start gap-4">
+                <div className="space-y-4 mb-8 border border-border rounded-xl p-4 sm:p-5 bg-muted/20">
+                  <div className="flex items-start gap-3 sm:gap-4">
                     <Clock className="w-6 h-6 text-accent flex-shrink-0 mt-1" />
-                    <div className="space-y-2">
-                      <div className="flex justify-between">
+                    <div className="space-y-2 w-full">
+                      <div className="flex flex-wrap justify-between gap-2">
                         <span className="font-semibold text-foreground">Monday - Friday</span>
                         <span className="text-muted-foreground">9:00 AM - 6:00 PM</span>
                       </div>
-                      <div className="flex justify-between">
+                      <div className="flex flex-wrap justify-between gap-2">
                         <span className="font-semibold text-foreground">Saturday</span>
                         <span className="text-muted-foreground">10:00 AM - 5:00 PM</span>
                       </div>
-                      <div className="flex justify-between">
+                      <div className="flex flex-wrap justify-between gap-2">
                         <span className="font-semibold text-foreground">Sunday</span>
                         <span className="text-muted-foreground">Closed</span>
                       </div>
@@ -205,7 +205,7 @@ export default function ContactPage() {
                   </div>
                 </div>
 
-                <div className="bg-muted/30 border border-border rounded-lg p-6 space-y-4">
+                <div className="bg-muted/30 border border-border rounded-xl p-5 sm:p-6 space-y-4">
                   <h3 className="text-lg font-serif font-bold text-foreground">Schedule a Consultation</h3>
                   <p className="text-muted-foreground text-sm">
                     Our experts are available for personalized 30-minute consultations to help you find the perfect device.

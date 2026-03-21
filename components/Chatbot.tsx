@@ -57,7 +57,7 @@ export function Chatbot() {
           {/* Header */}
           <div className="bg-foreground text-background px-4 py-4 flex items-center justify-between">
             <div>
-              <h3 className="font-serif font-bold">LuxCell Assistant</h3>
+              <h3 className="font-serif font-bold">HP Verse Assistant</h3>
               <p className="text-xs opacity-75">Always here to help</p>
             </div>
           </div>
