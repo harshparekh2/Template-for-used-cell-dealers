@@ -3,6 +3,7 @@
 import { Header } from '@/components/Header'
 import { Footer } from '@/components/Footer'
 import { useCartStore } from '@/store/cartStore'
+import type { CartItem } from '@/store/cartStore'
 import { useOrderStore } from '@/store/orderStore'
 import { useProductStore } from '@/store/productStore'
 import { useState } from 'react'
@@ -25,6 +26,8 @@ export default function CheckoutPage() {
   const [step, setStep] = useState<'shipping' | 'payment' | 'confirmation'>('shipping')
   const [isPlacingOrder, setIsPlacingOrder] = useState(false)
   const [orderError, setOrderError] = useState<string | null>(null)
+  const [orderItemsSnapshot, setOrderItemsSnapshot] = useState<CartItem[]>([])
+  const [orderTotalSnapshot, setOrderTotalSnapshot] = useState<number>(0)
   const [formData, setFormData] = useState({
     // Shipping
     firstName: '',
@@ -52,71 +55,15 @@ export default function CheckoutPage() {
 
   const handleShippingSubmit = (e: React.FormEvent) => {
     e.preventDefault()
-    if (hasUnavailableItems) return
     setStep('payment')
   }
 
   const handlePaymentSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setOrderError(null)
-    if (hasUnavailableItems) return
-
     setIsPlacingOrder(true)
     try {
-      await loadProducts()
-      syncItemsWithCatalog(useProductStore.getState().products)
-
-      const lineItems = useCartStore.getState().items
-      if (lineItems.length === 0) {
-        setOrderError('Your cart was updated because stock changed. Please review and try again.')
-        return
-      }
-
-      for (const line of lineItems) {
-        await loadProducts()
-        const latest = useProductStore.getState().products.find((p) => p.id === line.product.id)
-        const currentQty = Math.max(
-          0,
-          Math.floor(Number(latest?.stockQuantity ?? (latest?.inStock ? 1 : 0)))
-        )
-        if (!latest || currentQty < line.quantity) {
-          setOrderError(
-            'Not enough stock for one or more items. Your cart was updated — please review and try again.'
-          )
-          await loadProducts()
-          syncItemsWithCatalog(useProductStore.getState().products)
-          return
-        }
-      }
-
-      const totalAmount =
-        useCartStore.getState().getTotal() + Math.round(useCartStore.getState().getTotal() * 0.12)
-      const snapshotItems = [...useCartStore.getState().items]
-
-      for (const line of snapshotItems) {
-        await loadProducts()
-        const latest = useProductStore.getState().products.find((p) => p.id === line.product.id)
-        const currentQty = Math.max(
-          0,
-          Math.floor(Number(latest?.stockQuantity ?? (latest?.inStock ? 1 : 0)))
-        )
-        if (!latest || currentQty < line.quantity) {
-          setOrderError('Stock changed while completing your order. Please review your cart and try again.')
-          await loadProducts()
-          syncItemsWithCatalog(useProductStore.getState().products)
-          return
-        }
-        const nextQty = Math.max(0, currentQty - line.quantity)
-        await updateProduct(line.product.id, {
-          stockQuantity: nextQty,
-          inStock: nextQty > 0,
-        })
-      }
-
-      await loadProducts()
-      const catalog = useProductStore.getState().products
-
-      addOrder({
+      const created = await addOrder({
         customerName: `${formData.firstName} ${formData.lastName}`,
         email: formData.email,
         phone: formData.phone,
@@ -126,17 +73,19 @@ export default function CheckoutPage() {
         zip: formData.zip,
         country: formData.country,
         paymentMethod: formData.paymentMethod,
-        items: snapshotItems.map((line) => {
-          const fresh = catalog.find((p) => p.id === line.product.id) ?? line.product
-          return { ...line, product: fresh }
-        }),
-        total: totalAmount,
+        items,
+        // server recomputes total; kept to satisfy type
+        total: getTotal() + Math.round(getTotal() * 0.12),
       })
 
+      void created
+      setOrderItemsSnapshot([...items])
+      setOrderTotalSnapshot(getTotal() + Math.round(getTotal() * 0.12))
+      await loadProducts()
       clearCart()
       setStep('confirmation')
-    } catch {
-      setOrderError('Could not complete order. Please try again.')
+    } catch (err) {
+      setOrderError(err instanceof Error ? err.message : 'Could not complete order. Please try again.')
     } finally {
       setIsPlacingOrder(false)
     }
@@ -416,12 +365,15 @@ export default function CheckoutPage() {
                     </div>
                     <div>
                       <p className="text-sm text-muted-foreground">Items</p>
-                      <p className="text-lg font-semibold text-foreground">{items.length} item{items.length !== 1 ? 's' : ''}</p>
+                      <p className="text-lg font-semibold text-foreground">
+                        {orderItemsSnapshot.length} item
+                        {orderItemsSnapshot.length !== 1 ? 's' : ''}
+                      </p>
                     </div>
                     <div>
                       <p className="text-sm text-muted-foreground">Total Amount</p>
                       <p className="text-2xl font-serif font-bold text-foreground">
-                        {formatINR(getTotal() + Math.round(getTotal() * 0.12))}
+                        {formatINR(orderTotalSnapshot)}
                       </p>
                     </div>
                   </div>
@@ -441,7 +393,7 @@ export default function CheckoutPage() {
                 <h2 className="text-xl font-serif font-bold text-foreground">Order Summary</h2>
 
                 <div className="space-y-3 max-h-96 overflow-y-auto">
-                  {items.map((item) => (
+                  {orderItemsSnapshot.map((item) => (
                     <div key={item.product.id} className="flex justify-between text-sm pb-3 border-b border-border">
                       <div>
                         <p className="font-semibold text-foreground truncate">{item.product.name}</p>
@@ -457,7 +409,11 @@ export default function CheckoutPage() {
                 <div className="border-t border-border pt-4 space-y-3">
                   <div className="flex justify-between text-sm">
                     <span className="text-muted-foreground">Subtotal</span>
-                    <span className="text-foreground font-semibold">{formatINR(getTotal())}</span>
+                      <span className="text-foreground font-semibold">
+                        {formatINR(
+                          orderItemsSnapshot.reduce((sum, i) => sum + i.product.price * i.quantity, 0)
+                        )}
+                      </span>
                   </div>
                   <div className="flex justify-between text-sm">
                     <span className="text-muted-foreground">Shipping</span>
@@ -466,7 +422,11 @@ export default function CheckoutPage() {
                   <div className="flex justify-between text-sm">
                     <span className="text-muted-foreground">GST (12%)</span>
                     <span className="text-foreground font-semibold">
-                      {formatINR(Math.round(getTotal() * 0.12))}
+                        {formatINR(
+                          Math.round(
+                            orderItemsSnapshot.reduce((sum, i) => sum + i.product.price * i.quantity, 0) * 0.12
+                          )
+                        )}
                     </span>
                   </div>
                 </div>
@@ -474,7 +434,7 @@ export default function CheckoutPage() {
                 <div className="border-t border-border pt-4 flex justify-between items-center">
                   <span className="font-bold text-foreground">Total</span>
                   <span className="text-2xl font-serif font-bold text-foreground">
-                    {formatINR(getTotal() + Math.round(getTotal() * 0.12))}
+                      {formatINR(orderTotalSnapshot)}
                   </span>
                 </div>
               </div>

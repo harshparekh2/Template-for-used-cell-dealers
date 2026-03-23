@@ -20,7 +20,7 @@
     "year": "2024",
     "storage": "256GB",
     "ram": "8GB",
-    "stockQuantity": 5
+    "stockQuantity": 2
   },
   {
     "id": "2",
@@ -136,5 +136,28 @@
     "storage": "256GB",
     "ram": "12GB",
     "stockQuantity": 0
+  },
+  {
+    "name": "z fold 4",
+    "brand": "Samsung",
+    "price": 79999,
+    "images": [
+      "/assets/products/z-fold-4-1774261675628-04j8v.jpg"
+    ],
+    "specs": [
+      "50MP Camera",
+      "400mah",
+      "a4 chip"
+    ],
+    "description": "",
+    "inStock": false,
+    "condition": "Excellent",
+    "category": "flagship",
+    "color": "Black ",
+    "year": "2022",
+    "storage": "128",
+    "ram": "8 GB",
+    "stockQuantity": 0,
+    "id": "w61fu4hr1"
   }
 ]

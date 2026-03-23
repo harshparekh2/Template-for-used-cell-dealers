@@ -1,0 +1,131 @@
+[
+  {
+    "id": "HPV-589",
+    "customerName": "Harsh Parekh",
+    "email": "harshparekh726@gmail.com",
+    "phone": "7862938691",
+    "address": "a-67 sukan society, new ranip, Maharashtra - 382481, India",
+    "city": "new ranip",
+    "state": "Maharashtra",
+    "zip": "382481",
+    "country": "India",
+    "paymentMethod": "COD",
+    "items": [
+      {
+        "product": {
+          "id": "w61fu4hr1",
+          "name": "z fold 4",
+          "brand": "Samsung",
+          "price": 79999,
+          "images": [
+            "/assets/products/z-fold-4-1774261675628-04j8v.jpg"
+          ],
+          "specs": [
+            "50MP Camera",
+            "400mah",
+            "a4 chip"
+          ],
+          "description": "",
+          "inStock": true,
+          "condition": "Excellent",
+          "category": "flagship",
+          "color": "Black ",
+          "year": "2022",
+          "storage": "128",
+          "ram": "8 GB",
+          "stockQuantity": 1
+        },
+        "quantity": 1
+      }
+    ],
+    "total": 89599,
+    "status": "Pending",
+    "date": "Mar 23, 2026"
+  },
+  {
+    "id": "HPV-942",
+    "customerName": "swatyy joyce",
+    "email": "heyyswatyybitch123@gmail.com",
+    "phone": "78629-38691",
+    "address": "a-67 sukan society, new ranip, Gujarat - 380051, India",
+    "city": "new ranip",
+    "state": "Gujarat",
+    "zip": "380051",
+    "country": "India",
+    "paymentMethod": "COD",
+    "items": [
+      {
+        "product": {
+          "id": "1",
+          "name": "iPhone 16 Pro",
+          "brand": "Apple",
+          "price": 119900,
+          "images": [
+            "/assets/products/iphone-16-pro-1774105841845-09cxj.png"
+          ],
+          "specs": [
+            "6.3\" Display",
+            "A18 Pro",
+            "48MP Camera"
+          ],
+          "description": "Latest flagship iPhone with advanced AI features",
+          "inStock": true,
+          "condition": "Like New",
+          "category": "flagship",
+          "color": "Natural Titanium",
+          "year": "2024",
+          "storage": "256GB",
+          "ram": "8GB",
+          "stockQuantity": 4
+        },
+        "quantity": 4
+      }
+    ],
+    "total": 537152,
+    "status": "Pending",
+    "date": "Mar 23, 2026"
+  },
+  {
+    "id": "HPV-216",
+    "customerName": "Harsh Parekh",
+    "email": "harshparekh726@gmail.com",
+    "phone": "78629-38691",
+    "address": "28, Janta Market Road, new ranip, Gujarat - 382481, India",
+    "city": "new ranip",
+    "state": "Gujarat",
+    "zip": "382481",
+    "country": "India",
+    "paymentMethod": "UPI",
+    "items": [
+      {
+        "product": {
+          "id": "1",
+          "name": "iPhone 16 Pro",
+          "brand": "Apple",
+          "price": 119900,
+          "images": [
+            "/assets/products/iphone-16-pro-1774105841845-09cxj.png"
+          ],
+          "specs": [
+            "6.3\" Display",
+            "A18 Pro",
+            "48MP Camera"
+          ],
+          "description": "Latest flagship iPhone with advanced AI features",
+          "inStock": true,
+          "condition": "Like New",
+          "category": "flagship",
+          "color": "Natural Titanium",
+          "year": "2024",
+          "storage": "256GB",
+          "ram": "8GB",
+          "stockQuantity": 5
+        },
+        "quantity": 1
+      }
+    ],
+    "total": 134288,
+    "status": "Pending",
+    "date": "Mar 23, 2026"
+  }
+]

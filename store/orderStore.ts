@@ -21,41 +21,70 @@ export interface Order {
 
 interface OrderStore {
   orders: Order[]
-  addOrder: (order: Omit<Order, 'id' | 'date' | 'status'>) => void
-  updateOrderStatus: (id: string, status: Order['status']) => void
-  deleteOrder: (id: string) => void
+  loadOrders: () => Promise<void>
+  addOrder: (order: Omit<Order, 'id' | 'date' | 'status'>) => Promise<Order>
+  updateOrderStatus: (id: string, status: Order['status']) => Promise<void>
+  deleteOrder: (id: string) => Promise<void>
 }
 
 export const useOrderStore = create<OrderStore>()(
   persist(
     (set) => ({
       orders: [],
-      addOrder: (order) =>
+      loadOrders: async () => {
+        const res = await fetch('/api/orders', { cache: 'no-store' })
+        if (!res.ok) return
+        const data: Order[] = await res.json()
+        set({ orders: data })
+      },
+      addOrder: async (order) => {
+        const payload = {
+          customerName: order.customerName,
+          email: order.email,
+          phone: order.phone,
+          address: order.address,
+          city: order.city,
+          state: order.state,
+          zip: order.zip,
+          country: order.country,
+          paymentMethod: order.paymentMethod,
+          items: order.items.map((line) => ({
+            productId: line.product.id,
+            quantity: line.quantity,
+          })),
+        }
+
+        const res = await fetch('/api/orders/checkout', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload),
+        })
+
+        if (!res.ok) {
+          const msg = await res.json().catch(() => null)
+          throw new Error(msg?.message || 'Could not complete order. Please try again.')
+        }
+
+        const created: Order = await res.json()
+        set((state) => ({ orders: [created, ...state.orders] }))
+        return created
+      },
+      updateOrderStatus: async (id, status) => {
+        const res = await fetch(`/api/orders/${id}`, {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ status }),
+        })
+        if (!res.ok) return
         set((state) => ({
-          orders: [
-            {
-              ...order,
-              id: `HPV-${Math.floor(Math.random() * 1000).toString().padStart(3, '0')}`,
-              date: new Date().toLocaleDateString('en-US', {
-                month: 'short',
-                day: 'numeric',
-                year: 'numeric',
-              }),
-              status: 'Pending',
-            },
-            ...state.orders,
-          ],
-        })),
-      updateOrderStatus: (id, status) =>
-        set((state) => ({
-          orders: state.orders.map((order) =>
-            order.id === id ? { ...order, status } : order
-          ),
-        })),
-      deleteOrder: (id) =>
-        set((state) => ({
-          orders: state.orders.filter((order) => order.id !== id),
-        })),
+          orders: state.orders.map((order) => (order.id === id ? { ...order, status } : order)),
+        }))
+      },
+      deleteOrder: async (id) => {
+        const res = await fetch(`/api/orders/${id}`, { method: 'DELETE' })
+        if (!res.ok) return
+        set((state) => ({ orders: state.orders.filter((order) => order.id !== id) }))
+      },
     }),
     {
       name: 'order-store',

@@ -14,7 +14,7 @@ export default function AdminDashboardPage() {
   const admin = useAdminStore((state) => state.admin)
   const logout = useAdminStore((state) => state.logout)
   const { products, addProduct, updateProduct, deleteProduct, loadProducts } = useProductStore()
-  const { orders, updateOrderStatus, deleteOrder } = useOrderStore()
+  const { orders, updateOrderStatus, deleteOrder, loadOrders } = useOrderStore()
   const router = useRouter()
   
   const [activeTab, setActiveTab] = useState<'overview' | 'products' | 'orders'>('overview')
@@ -68,6 +68,7 @@ export default function AdminDashboardPage() {
       return
     }
     loadProducts()
+    void loadOrders()
   }, [isLoggedIn, router, loadProducts])
 
   if (!isHydrated) return null
